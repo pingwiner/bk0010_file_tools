@@ -1,5 +1,5 @@
 #include "directory.h"
-
+#include <string.h>
 
 #define DIR_SIZE 		512 * 7
 #define MAX_FILES_COUNT 112
@@ -58,15 +58,23 @@ void list_directory(OnNextFile on_next_file) {
 err_code find_file_by_name(const char* filename, FileParams* params) {
 	char buf[16];
 	for (int i = 0; i < MAX_FILES_COUNT; i++) {
-
+        copy_file_name(&directory[i], buf);
+        if (strcmp(filename, buf) == 0) {
+            strcpy(params->filename, buf);
+            params->address = directory[i].address;
+            params->first_cluster = directory[i].first_cluster;
+            params->size = directory[i].file_size;
+            params->index = i;
+            return ERR_OK;
+        }
 	}
-	return ERR_OK;
+	return ERR_NOT_FOUND;
 }
 
 int directory_test() {
-	char buf[16];
-	copy_file_name(&directory[1], buf);
-	printf("%s\n", buf);
+    FileParams params;
+    find_file_by_name("DPRESS.OVL", &params);
+	printf("%s %x %d\n", params.filename, params.address, params.size);
 	return 0;
 }
 

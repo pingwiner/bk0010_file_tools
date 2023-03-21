@@ -8,7 +8,7 @@
 
 typedef struct FileParams {
 	char filename[16];
-	uint16_t size;
+    uint32_t size;
 	uint16_t address;
 	uint16_t first_cluster;
 	uint16_t index;
