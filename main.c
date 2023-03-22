@@ -7,6 +7,7 @@
 #include "fat.h"
 #include "directory.h"
 #include "err_code.h"
+#include "file.h"
 
 const char* img_path = "/Users/nightrain/bk/bk2010/disks/Andos330.img";
 
@@ -43,6 +44,9 @@ int main() {
   }
 
   directory_test();
+
+  file_test(f);
+
 
   free_fat();
   fclose(f);

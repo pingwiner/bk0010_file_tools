@@ -1,5 +1,6 @@
 #include "directory.h"
 #include <string.h>
+#include <stdio.h>
 
 #define DIR_SIZE 		512 * 7
 #define MAX_FILES_COUNT 112

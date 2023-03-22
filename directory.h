@@ -8,10 +8,10 @@
 
 typedef struct FileParams {
 	char filename[16];
-    uint32_t size;
+    size_t size;
+    size_t first_cluster;
 	uint16_t address;
-	uint16_t first_cluster;
-	uint16_t index;
+    uint16_t index;
 } FileParams;
 
 typedef void (*OnNextFile)(char* filename, char* extension, uint16_t address, uint32_t size);
