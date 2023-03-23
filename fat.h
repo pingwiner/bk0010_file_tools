@@ -12,7 +12,12 @@
 #define FAT_RSRVD	0xFF0
 
 err_code read_fat(uint16_t fat_size, FILE* f);
+
 uint16_t get_fat_element(uint16_t index);
+
+void set_fat_element(uint16_t index, uint16_t value);
+
+err_code fat_sync(FILE* f);
 
 void free_fat();
 

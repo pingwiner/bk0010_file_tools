@@ -47,8 +47,6 @@ int main() {
 
   file_test(f);
 
-
-  free_fat();
   fclose(f);
   return 0;
 }

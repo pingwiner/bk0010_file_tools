@@ -75,7 +75,7 @@ err_code find_file_by_name(const char* filename, FileParams* params) {
 int directory_test() {
     FileParams params;
     find_file_by_name("DPRESS.OVL", &params);
-	printf("%s %x %d\n", params.filename, params.address, params.size);
+	printf("%s %x %zu\n", params.filename, params.address, params.size);
 	return 0;
 }
 
