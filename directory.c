@@ -1,6 +1,8 @@
 #include "directory.h"
+#include "boot.h"
 #include <string.h>
 #include <stdio.h>
+#include "types.h"
 
 #define DIR_SIZE 		512 * 7
 #define MAX_FILES_COUNT 112
@@ -11,7 +13,9 @@ typedef struct DirectoryEntry {
 	char filename[8];
 	char extension[3];
 	uint8_t attributes;
-	char reserved[10];
+	char reserved[8];
+    uint8_t dir_number;
+    uint8_t parent_dir;
 	uint16_t address;
 	uint16_t date;
 	uint16_t first_cluster;
@@ -40,7 +44,9 @@ static void copy_file_name(const DirectoryEntry* entry, char* dest) {
 	dest[i] = 0;
 }
 
-err_code read_directory(FILE* f) {
+err_code dir_init(FILE* f) {
+    size_t dir_offset = boot_dir_offset();
+    fseek(f, dir_offset, SEEK_SET);
 	int read_result = fread(&directory, DIR_SIZE, 1, f);
 	if (read_result != 1) {
 	    return ERR_DISK_IO;
@@ -48,15 +54,20 @@ err_code read_directory(FILE* f) {
 	return ERR_OK;
 }
 
-void list_directory(OnNextFile on_next_file) {
+static bool is_directory(const DirectoryEntry* params) {
+    return (params->file_size == 0) && (params->address == 0) && (params->first_cluster == 0);
+}
+
+void dir_list(uint8_t dir, OnNextFile on_next_file) {
 	for (int i = 0; i < MAX_FILES_COUNT; i++) {
 		if (directory[i].filename[0] == 0) continue;
 		if ((uint8_t)directory[i].filename[0] == FILE_DELETED) continue;
-		on_next_file(directory[i].filename, directory[i].extension, directory[i].address, directory[i].file_size);
+        if (directory[i].parent_dir != dir) continue;
+		on_next_file(directory[i].filename, directory[i].extension, directory[i].address, directory[i].file_size, is_directory(&directory[i]));
 	}
 }
 
-err_code find_file_by_name(const char* filename, FileParams* params) {
+err_code dir_file_by_name(const char* filename, FileParams* params) {
 	char buf[16];
 	for (int i = 0; i < MAX_FILES_COUNT; i++) {
         copy_file_name(&directory[i], buf);
@@ -72,9 +83,9 @@ err_code find_file_by_name(const char* filename, FileParams* params) {
 	return ERR_NOT_FOUND;
 }
 
-int directory_test() {
+int dir_test() {
     FileParams params;
-    find_file_by_name("DPRESS.OVL", &params);
+    dir_file_by_name("DPRESS.OVL", &params);
 	printf("%s %x %zu\n", params.filename, params.address, params.size);
 	return 0;
 }

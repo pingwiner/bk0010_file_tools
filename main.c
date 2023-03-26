@@ -11,24 +11,37 @@
 
 const char* img_path = "/Users/nightrain/bk/bk2010/disks/Andos330.img";
 
-void on_next_file(char* filename, char* extension, uint16_t address, uint32_t file_size) {
-  printf("%.8s %.3s    %.4x %d\n", filename, extension, address, file_size);
+void on_next_file(char* filename, char* extension, uint16_t address, uint32_t file_size, bool is_directory) {
+  printf("%.8s %.3s    %.4x %d %s\n", filename, extension, address, file_size, is_directory ? "DIR" : "");
+}
+
+FILE* image_init(const char* filename) {
+    FILE* f = fopen(img_path, "r+");
+    if (f == null) {
+        return f;
+    }
+    err_code err = boot_init(f, 0);
+    if (err != ERR_OK) {
+        fclose(f);
+        return null;
+    }
+    return f;
 }
 
 int main() {
-  FILE* f = fopen(img_path, "r");
-  read_boot_sector(f);
-  
-  uint16_t bytes_per_block = get_bytes_per_block();
-  uint16_t bootloader_size = get_bootloader_size();
-  uint16_t blocks_per_fat = get_blocks_per_fat();
-  uint16_t fat_size = bytes_per_block * blocks_per_fat;
-  uint8_t fat_tables_count = get_fat_tables_count();
+  FILE* f = image_init(img_path);
+  if (f == null) return 1;
 
-  fseek(f, bytes_per_block * bootloader_size, SEEK_SET);
-  read_fat(fat_size, f);
-  fseek(f, bytes_per_block * (bootloader_size + blocks_per_fat * fat_tables_count), SEEK_SET);
-  read_directory(f);
+  if (fat_init(f) != ERR_OK) {
+      fclose(f);
+      return 1;
+  }
+
+  if (dir_init(f) != ERR_OK) {
+      fclose(f);
+      return 1;
+  }
+
 
   //printf("filename ext    addr size\n");
   //printf("-------------------------\n");
@@ -43,7 +56,9 @@ int main() {
     printf("FAT test failed\n");
   }
 
-  directory_test();
+  dir_test();
+
+  dir_list(0, on_next_file);
 
   file_test(f);
 

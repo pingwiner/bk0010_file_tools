@@ -5,23 +5,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "err_code.h"
+#include "types.h"
 
 typedef struct FileParams {
 	char filename[16];
     size_t size;
     size_t first_cluster;
+    bool is_directory;
 	uint16_t address;
     uint16_t index;
 } FileParams;
 
-typedef void (*OnNextFile)(char* filename, char* extension, uint16_t address, uint32_t size);
+typedef void (*OnNextFile)(char* filename, char* extension, uint16_t address, uint32_t size, bool is_directory);
 
-err_code read_directory(FILE* f); 
+err_code dir_init(FILE* f);
 
-void list_directory(OnNextFile on_next_file);
+void dir_list(uint8_t dir, OnNextFile on_next_file);
 
-err_code find_file_by_name(const char* filename, FileParams* params);
+err_code dir_file_by_name(const char* filename, FileParams* params);
 
-int directory_test();
+int dir_test();
 
 #endif //__DIRECTORY_H__

@@ -25,7 +25,11 @@ typedef struct BootSector {
 
 static BootSector boot_sector;
 
-err_code read_boot_sector(FILE* f) {
+static size_t image_offset = 0;
+
+err_code boot_init(FILE* f, size_t offset) {
+  image_offset = offset;
+  fseek(f, offset, SEEK_SET);
   int read_result = fread(&boot_sector, sizeof(boot_sector), 1, f);
   if (read_result != 1) {
   	return ERR_DISK_IO;
@@ -33,28 +37,20 @@ err_code read_boot_sector(FILE* f) {
   return ERR_OK;	
 }
 
-uint8_t	get_blocks_per_cluster() {
-	return boot_sector.blocks_per_cluster;
-}
-
-uint16_t get_blocks_count() {
+uint16_t boot_blocks_count() {
 	return boot_sector.blocks_count;
 }
 
-uint16_t get_bytes_per_block() {
-	return boot_sector.bytes_per_block;
+size_t boot_fat_offset() {
+	return image_offset + boot_sector.bytes_per_block * boot_sector.bootloader_size;
 }
 
-uint16_t get_bootloader_size() {
-	return boot_sector.bootloader_size;
+size_t boot_dir_offset() {
+	return boot_fat_offset() + boot_sector.blocks_per_fat * boot_sector.bytes_per_block * boot_sector.fat_tables_count;
 }
 
-uint16_t get_blocks_per_fat() {
-	return boot_sector.blocks_per_fat;	
-}
-
-uint8_t get_fat_tables_count() {
-	return boot_sector.fat_tables_count;
+size_t boot_image_offset() {
+    return image_offset;
 }
 
 int boot_test() {

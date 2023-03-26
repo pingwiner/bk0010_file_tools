@@ -5,20 +5,16 @@
 #include <stdio.h>
 #include "err_code.h"
 
-err_code read_boot_sector(FILE* f);
+err_code boot_init(FILE* f, size_t offset);
 
-uint8_t	get_blocks_per_cluster();
+uint16_t boot_blocks_count();
 
-uint16_t get_blocks_count();
+size_t boot_fat_offset();
 
-uint16_t get_bytes_per_block();
+size_t boot_dir_offset();
 
-uint16_t get_bootloader_size();
+size_t boot_image_offset();
 
-uint16_t get_blocks_per_fat();
-
-uint8_t get_fat_tables_count();
-
-int boot_test(); 
+int boot_test();
 
 #endif //__BOOT_H__

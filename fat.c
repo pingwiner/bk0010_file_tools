@@ -1,33 +1,46 @@
 #include "fat.h"
+#include "boot.h"
 #include <string.h>
 #include "types.h"
 #include "const.h"
 
-static uint8_t fat1[SECTOR_SIZE * 2];
-static uint8_t fat2[SECTOR_SIZE * 2];
+//ANDOS always uses these values
+#define SECTOR_SIZE 512
+#define FAT_SIZE SECTOR_SIZE * 2
 
-#define MAX_CLUSTER_INDEX 681
+static uint8_t fat1[FAT_SIZE];
+static uint8_t fat2[FAT_SIZE];
 
-err_code read_fat(uint16_t fat_size, FILE* f) {
-  int read_result = fread(fat1, fat_size, 1, f);
+static uint16_t max_cluster_index = 0;
+
+err_code fat_init(FILE* f) {
+  size_t fat_offset = boot_fat_offset();
+  fseek(f, fat_offset, SEEK_SET);
+  int read_result = fread(fat1, FAT_SIZE, 1, f);
   if (read_result != 1) {
     return ERR_DISK_IO;
   }
 
-  read_result = fread(fat2, fat_size, 1, f);
+  read_result = fread(fat2, FAT_SIZE, 1, f);
   if (read_result != 1) {
     return ERR_DISK_IO;
   }
+
+  if (fat_test() != 0) {
+      return ERR_FAT_DATA_INCORRECT;
+  }
+
+    max_cluster_index = boot_blocks_count() / 4 - 2;
 
   return ERR_OK;
 }
 
-bool is_reserved(uint16_t value) {
+bool fat_is_reserved(uint16_t value) {
   return ((value >= FAT_RSRVD) && (value < FAT_BAD));
 }
 
-uint16_t get_fat_element(uint16_t index) {
-  if (index > MAX_CLUSTER_INDEX) return FAT_BAD;
+uint16_t fat_get_element(uint16_t index) {
+  if (index > max_cluster_index) return FAT_BAD;
   uint16_t offset = index * 3 / 2;
   uint16_t value = *( (uint16_t*) &fat1[offset] );
   if (index & 1) {
@@ -37,8 +50,9 @@ uint16_t get_fat_element(uint16_t index) {
   }
 }
 
-void set_fat_element(uint16_t index, uint16_t value) {
-    if (index > MAX_CLUSTER_INDEX) return;
+void fat_set_element(uint16_t index, uint16_t value) {
+    if (index > max_cluster_index) return;
+    if (index < 2) return;
     uint16_t offset = index * 3 / 2;
     uint16_t* p = (uint16_t*) &fat1[offset];
     uint16_t tmp = *p;
@@ -54,18 +68,26 @@ void set_fat_element(uint16_t index, uint16_t value) {
 
 err_code fat_sync(FILE* f) {
     memcpy(fat2, fat1, sizeof(fat1));
-    fseek(f, SECTOR_SIZE, SEEK_SET);
-    int write_result = fwrite(fat1, sizeof(fat1), 1, f);
+    size_t fat_offset = boot_fat_offset();
+    fseek(f, fat_offset, SEEK_SET);
+    int write_result = fwrite(fat1, FAT_SIZE, 1, f);
     if (write_result != 1) {
         return ERR_DISK_IO;
     }
 
-    write_result = fwrite(fat2, sizeof(fat2), 1, f);
+    write_result = fwrite(fat2, FAT_SIZE, 1, f);
     if (write_result != 1) {
         return ERR_DISK_IO;
     }
 
     return ERR_OK;
+}
+
+uint16_t fat_find_free_cluster() {
+    for (uint16_t i = 2; i <= max_cluster_index; i++) {
+        if (fat_get_element(i) == 0) return i;
+    }
+    return 0;
 }
 
 int fat_test() {
