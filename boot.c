@@ -53,6 +53,10 @@ size_t boot_image_offset() {
     return image_offset;
 }
 
+size_t boot_cluster_size() {
+    return boot_sector.blocks_per_cluster * boot_sector.bytes_per_block;
+}
+
 int boot_test() {
 	ASSERT_EQUALS(boot_sector.boot_sign, 0xA0);
 	ASSERT_EQUALS(boot_sector.bytes_per_block, 0x200);

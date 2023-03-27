@@ -90,6 +90,23 @@ uint16_t fat_find_free_cluster() {
     return 0;
 }
 
+size_t fat_get_free_space() {
+    size_t free_cluster_count = 0;
+    for (int i = 2; i <= max_cluster_index; i++) {
+        if (fat1[i] == FAT_FREE) free_cluster_count++;
+    }
+    return free_cluster_count * boot_cluster_size();
+}
+
+size_t fat_get_file_size(uint16_t cluster) {
+    size_t clusters_count = 0;
+    while (cluster != FAT_EOF) {
+        clusters_count++;
+        cluster = fat_get_element(cluster);
+    }
+    return clusters_count * boot_cluster_size();
+}
+
 int fat_test() {
   if (memcmp(fat1, fat2, SECTOR_SIZE * 2) != 0) return 1;
   if (fat1[0] != 0xF9) return 1;

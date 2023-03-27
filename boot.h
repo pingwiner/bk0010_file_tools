@@ -15,6 +15,8 @@ size_t boot_dir_offset();
 
 size_t boot_image_offset();
 
+size_t boot_cluster_size();
+
 int boot_test();
 
 #endif //__BOOT_H__

@@ -24,6 +24,10 @@ err_code fat_sync(FILE* f);
 
 uint16_t fat_find_free_cluster();
 
+size_t fat_get_free_space();
+
+size_t fat_get_file_size(uint16_t first_cluster);
+
 int fat_test();
 
 #endif //__FAT_H__

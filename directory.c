@@ -83,6 +83,10 @@ err_code dir_file_by_name(const char* filename, FileParams* params) {
 	return ERR_NOT_FOUND;
 }
 
+err_code dir_create_file(const char* filename, size_t file_size) {
+
+}
+
 int dir_test() {
     FileParams params;
     dir_file_by_name("DPRESS.OVL", &params);
